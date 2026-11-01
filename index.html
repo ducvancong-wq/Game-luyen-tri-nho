@@ -232,20 +232,70 @@
             </div>
           </div>
 
-          <!-- Text-to-Speech Toggle -->
-          <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="w-11 h-11 bg-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-center text-2xl font-bold">
-                <i class="ph-bold ph-megaphone"></i>
-              </span>
+          <!-- Text-to-Speech Settings Section -->
+          <div class="bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border-2 border-emerald-200 space-y-3.5 shadow-sm">
+            <!-- Header & Toggle Switch -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-11 h-11 bg-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-sm">
+                  <i class="ph-bold ph-megaphone"></i>
+                </span>
+                <div>
+                  <div class="font-extrabold text-emerald-950 text-base sm:text-lg">2. Giọng nói Tiếng Việt</div>
+                  <div class="text-xs sm:text-sm text-emerald-800 font-medium">Phát âm tên thẻ, chào hỏi và đọc kết quả bằng tiếng Việt</div>
+                </div>
+              </div>
+              <button id="toggleVoiceBtn" onclick="toggleVoice()" class="px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base shadow-sm">
+                Bật
+              </button>
+            </div>
+
+            <!-- Voice Controls Details -->
+            <div id="voiceControlsContainer" class="pt-3 border-t border-emerald-200/80 space-y-3.5">
+              <!-- Voice Selector -->
               <div>
-                <div class="font-extrabold text-emerald-950 text-base sm:text-lg">Đọc tên thẻ (Giọng nói)</div>
-                <div class="text-xs sm:text-sm text-emerald-800 font-medium">Tự động phát âm tiếng Việt khi mở thẻ</div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="voiceSelect" class="text-xs sm:text-sm font-extrabold text-slate-700 flex items-center gap-1.5">
+                    <i class="ph-bold ph-user-sound text-emerald-700 text-lg"></i> Giọng đọc:
+                  </label>
+                  <button type="button" onclick="testCurrentVoice()" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 flex items-center gap-1 shadow-sm">
+                    <i class="ph-bold ph-speaker-high text-base"></i> Nghe thử giọng
+                  </button>
+                </div>
+                <select id="voiceSelect" onchange="onVoiceChange(this.value)" class="w-full p-2.5 rounded-xl border-2 border-emerald-300 bg-white text-slate-800 font-bold text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm cursor-pointer">
+                  <option value="auto">🌟 Tự động chọn giọng tiếng Việt chuẩn tốt nhất</option>
+                  <option value="online">🌐 Giọng chuẩn trực tuyến (Google TTS - Tự nhiên, Rõ ràng)</option>
+                </select>
+                <div id="voiceCurrentNote" class="text-xs text-emerald-800 font-semibold mt-1.5 flex items-center gap-1">
+                  <i class="ph-bold ph-check-circle text-emerald-600"></i>
+                  <span>Đang tải danh sách giọng đọc...</span>
+                </div>
+              </div>
+
+              <!-- Speed Selector -->
+              <div>
+                <label class="block text-xs sm:text-sm font-extrabold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <i class="ph-bold ph-gauge text-emerald-700 text-lg"></i> Tốc độ đọc:
+                </label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" onclick="setVoiceSpeed('slow')" id="speedBtn-slow" class="speed-select-btn py-2 px-2 rounded-xl border-2 text-center font-bold transition text-xs sm:text-sm">
+                    🐢 Chậm rãi
+                  </button>
+                  <button type="button" onclick="setVoiceSpeed('normal')" id="speedBtn-normal" class="speed-select-btn py-2 px-2 rounded-xl border-2 text-center font-bold transition text-xs sm:text-sm">
+                    🌟 Vừa vặn
+                  </button>
+                  <button type="button" onclick="setVoiceSpeed('fast')" id="speedBtn-fast" class="speed-select-btn py-2 px-2 rounded-xl border-2 text-center font-bold transition text-xs sm:text-sm">
+                    ⚡ Nhanh nhẹn
+                  </button>
+                </div>
+              </div>
+
+              <!-- Helpful Tip for Seniors & Users -->
+              <div class="text-[11px] sm:text-xs text-emerald-900 bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-200 flex items-start gap-2">
+                <i class="ph-bold ph-sparkle text-amber-600 text-base flex-shrink-0 mt-0.5"></i>
+                <span>Gợi ý: Mở game bằng <strong>Microsoft Edge</strong> hoặc <strong>Google Chrome</strong> để thưởng thức các giọng đọc tiếng Việt truyền cảm, tự nhiên nhất (Hoài My, Nam Minh).</span>
               </div>
             </div>
-            <button id="toggleVoiceBtn" onclick="toggleVoice()" class="px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base">
-              Bật
-            </button>
           </div>
 
           <!-- Font Size Selection -->
@@ -528,6 +578,8 @@
     let userSettings = {
       theme: 'plants',
       voiceEnabled: true,
+      voiceURI: 'auto',
+      voiceSpeed: 'normal',
       fontSize: 'large', // normal, large, xlarge
       previewDuration: 3, // 3s, 5s, 7s (default 3s)
       timeframe: '7days', // 1day, 3days, 7days, 1month
@@ -542,6 +594,12 @@
       const savedSettings = localStorage.getItem('memory_game_settings');
       if (savedSettings) {
         userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+        if (!['slow', 'normal', 'fast'].includes(userSettings.voiceSpeed)) {
+          userSettings.voiceSpeed = 'normal';
+        }
+        if (!userSettings.voiceURI) {
+          userSettings.voiceURI = 'auto';
+        }
         if (![3, 5, 7].includes(userSettings.previewDuration)) {
           userSettings.previewDuration = 3;
         }
@@ -584,21 +642,275 @@
       }
     }
 
-    // Text to Speech (TTS) for Vietnamese reading
+    // ==========================================
+    // TỐI ƯU HÓA GIỌNG ĐỌC TIẾNG VIỆT CHUẨN
+    // ==========================================
+    let activeAudio = null;
+    let onlineSentenceTimeout = null;
+
+    function stopSpeaking() {
+      if (onlineSentenceTimeout) {
+        clearTimeout(onlineSentenceTimeout);
+        onlineSentenceTimeout = null;
+      }
+      if (activeAudio) {
+        try {
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+        } catch (e) {}
+        activeAudio = null;
+      }
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    }
+
+    function getSpeedRate() {
+      if (userSettings.voiceSpeed === 'slow') return 0.88;
+      if (userSettings.voiceSpeed === 'fast') return 1.15;
+      return 0.98; // Tốc độ chuẩn tự nhiên, dễ nghe và không bị rè
+    }
+
+    // Lấy danh sách giọng tiếng Việt có sẵn trong trình duyệt/hệ điều hành
+    function getVietnameseVoices() {
+      if (!('speechSynthesis' in window)) return [];
+      const allVoices = window.speechSynthesis.getVoices() || [];
+      return allVoices.filter(v => {
+        const l = (v.lang || '').toLowerCase();
+        const n = (v.name || '').toLowerCase();
+        return l === 'vi-vn' || l === 'vi' || l.startsWith('vi-') || l.startsWith('vi_') ||
+               n.includes('vietnam') || n.includes('tiếng việt') || n.includes('tieng viet') ||
+               n.includes('hoaimy') || n.includes('namminh');
+      });
+    }
+
+    // Chọn giọng đọc tốt nhất theo thứ tự ưu tiên
+    function findBestVoice() {
+      if (userSettings.voiceURI === 'online') {
+        return 'online';
+      }
+
+      if (!('speechSynthesis' in window)) return 'online';
+      const vnVoices = getVietnameseVoices();
+
+      // Nếu người dùng chọn một giọng cụ thể
+      if (userSettings.voiceURI && userSettings.voiceURI !== 'auto') {
+        const found = vnVoices.find(v => (v.voiceURI || v.name) === userSettings.voiceURI);
+        if (found) return found;
+      }
+
+      // Nếu máy chưa cài giọng tiếng Việt -> dùng giọng chuẩn online (Google TTS)
+      if (vnVoices.length === 0) {
+        return 'online';
+      }
+
+      // 1. Ưu tiên cao nhất: Microsoft Hoài My (Edge Natural - Giọng nữ ngọt ngào, chuẩn tự nhiên)
+      const hoaiMy = vnVoices.find(v => v.name.includes('HoaiMy') || (v.name.includes('Natural') && !v.name.includes('NamMinh')));
+      if (hoaiMy) return hoaiMy;
+
+      // 2. Microsoft Nam Minh (Edge Natural - Giọng nam ấm áp, rõ ràng)
+      const namMinh = vnVoices.find(v => v.name.includes('NamMinh'));
+      if (namMinh) return namMinh;
+
+      // 3. Google Tiếng Việt (Chrome - Trong trẻo, rõ lời)
+      const google = vnVoices.find(v => v.name.toLowerCase().includes('google'));
+      if (google) return google;
+
+      // 4. Giọng tiếng Việt khác có sẵn
+      return vnVoices[0];
+    }
+
+    // Đọc bằng giọng chuẩn trực tuyến (Google TTS Audio) - Đảm bảo phát âm tiếng Việt 100% chuẩn
+    function speakOnline(text, onEnd) {
+      stopSpeaking();
+      if (!text || !text.trim()) {
+        if (onEnd) onEnd();
+        return;
+      }
+
+      const clean = text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      // Nếu câu ngắn (dưới 150 ký tự), phát trực tiếp
+      if (clean.length <= 150) {
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(clean)}&tl=vi&client=tw-ob`;
+        activeAudio = new Audio(url);
+        try {
+          activeAudio.playbackRate = getSpeedRate();
+        } catch (e) {}
+        if (onEnd) activeAudio.onended = onEnd;
+        activeAudio.onerror = (e) => {
+          console.warn('Online TTS audio error:', e);
+          if (onEnd) onEnd();
+        };
+        activeAudio.play().catch(e => {
+          console.warn('Online TTS play blocked/failed:', e);
+          if (onEnd) onEnd();
+        });
+        return;
+      }
+
+      // Đối với đoạn văn dài (như lời chúc chiến thắng), ngắt câu để đọc liền mạch
+      const sentences = clean.match(/[^.!?]+[.!?]*/g) || [clean];
+      const validSentences = sentences.map(s => s.trim()).filter(s => s.length > 0);
+      
+      let curIdx = 0;
+      function playNextSentence() {
+        if (curIdx >= validSentences.length) {
+          activeAudio = null;
+          if (onEnd) onEnd();
+          return;
+        }
+        const s = validSentences[curIdx];
+        curIdx++;
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(s.substring(0, 150))}&tl=vi&client=tw-ob`;
+        activeAudio = new Audio(url);
+        try {
+          activeAudio.playbackRate = getSpeedRate();
+        } catch (e) {}
+        activeAudio.onended = () => {
+          onlineSentenceTimeout = setTimeout(playNextSentence, 120);
+        };
+        activeAudio.onerror = () => {
+          playNextSentence();
+        };
+        activeAudio.play().catch(e => {
+          console.warn('Online sentence play failed:', e);
+          playNextSentence();
+        });
+      }
+
+      playNextSentence();
+    }
+
+    // Hàm phát âm chính thức cho toàn bộ trò chơi
     function speakText(text) {
       if (!userSettings.voiceEnabled) return;
-      if (!('speechSynthesis' in window)) return;
+      if (!text || !text.trim()) return;
 
+      const chosenVoice = findBestVoice();
+
+      // Nếu người dùng chọn giọng online hoặc thiết bị không có giọng tiếng Việt
+      if (chosenVoice === 'online' || !chosenVoice) {
+        speakOnline(text);
+        return;
+      }
+
+      // Phát bằng Web Speech API với giọng Tiếng Việt được chỉ định đích danh
       try {
-        window.speechSynthesis.cancel(); // cancel any active utterance
+        stopSpeaking();
+        if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'vi-VN';
-        utterance.rate = 0.82; // Gentle, very clear pacing for senior listeners
+        utterance.voice = chosenVoice;
+        utterance.lang = chosenVoice.lang || 'vi-VN';
+        utterance.rate = getSpeedRate();
         utterance.pitch = 1.0;
+
+        // Lưu biến toàn cục tránh Chromium tự động Garbage Collect ngắt tiếng giữa chừng
+        window._activeUtterance = utterance;
+
+        utterance.onerror = (err) => {
+          console.warn('SpeechSynthesis error, falling back to online TTS:', err);
+          speakOnline(text);
+        };
+
         window.speechSynthesis.speak(utterance);
       } catch (err) {
-        console.warn('SpeechSynthesis error:', err);
+        console.warn('SpeechSynthesis exception, falling back to online TTS:', err);
+        speakOnline(text);
       }
+    }
+
+    // Phát âm thử để người dùng kiểm tra chất giọng
+    function testCurrentVoice() {
+      const phrases = [
+        'Chào bạn Trà My! Giọng nói tiếng Việt đã được chỉnh chuẩn và rất rõ ràng rồi nhé.',
+        'Hoa sen, quả táo, ấm trà, bánh mì thơm ngon.',
+        'Chúc bạn Trà My một buổi rèn luyện trí nhớ thật vui vẻ và minh mẫn!'
+      ];
+      const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+      speakText(randomPhrase);
+    }
+
+    // Chuyển đổi giọng đọc
+    function onVoiceChange(val) {
+      userSettings.voiceURI = val;
+      saveSettings();
+      updateVoiceStatusText();
+      testCurrentVoice();
+    }
+
+    // Chuyển đổi tốc độ đọc
+    function setVoiceSpeed(speed) {
+      userSettings.voiceSpeed = speed;
+      saveSettings();
+      updateSettingsUI();
+      testCurrentVoice();
+    }
+
+    // Cập nhật danh sách giọng trên giao diện
+    function updateVoiceSelectUI() {
+      const voiceSelect = document.getElementById('voiceSelect');
+      if (!voiceSelect) return;
+
+      const vnVoices = getVietnameseVoices();
+      const currentVal = userSettings.voiceURI || 'auto';
+
+      let html = `<option value="auto">🌟 Tự động chọn giọng tiếng Việt chuẩn tốt nhất</option>`;
+      html += `<option value="online">🌐 Giọng chuẩn trực tuyến (Google TTS - Tự nhiên, Rõ ràng)</option>`;
+
+      if (vnVoices.length > 0) {
+        vnVoices.forEach(v => {
+          let label = v.name;
+          if (v.name.includes('HoaiMy')) {
+            label = 'Microsoft Hoài My (Nữ - Truyền cảm, Tự nhiên) ⭐';
+          } else if (v.name.includes('NamMinh')) {
+            label = 'Microsoft Nam Minh (Nam - Rõ ràng, Tự nhiên) ⭐';
+          } else if (v.name.toLowerCase().includes('google')) {
+            label = 'Google Tiếng Việt (Nữ - Trong trẻo, Rõ lời) ⭐';
+          } else if (v.name.includes('An') && v.name.includes('Vietnamese')) {
+            label = 'Microsoft An (Tiếng Việt)';
+          }
+          const val = v.voiceURI || v.name;
+          html += `<option value="${val}">${label}</option>`;
+        });
+      }
+
+      voiceSelect.innerHTML = html;
+      voiceSelect.value = currentVal;
+      if (voiceSelect.selectedIndex === -1) {
+        voiceSelect.value = 'auto';
+      }
+
+      updateVoiceStatusText();
+    }
+
+    // Cập nhật dòng thông báo hiển thị giọng đang hoạt động
+    function updateVoiceStatusText() {
+      const noteEl = document.getElementById('voiceCurrentNote');
+      if (!noteEl) return;
+
+      const activeVoice = findBestVoice();
+      if (activeVoice === 'online' || !activeVoice) {
+        noteEl.innerHTML = `<i class="ph-bold ph-globe text-emerald-600 text-sm"></i> Đang dùng: <strong class="text-emerald-950 font-bold">Giọng trực tuyến chuẩn (Google TTS)</strong>`;
+      } else {
+        let name = activeVoice.name;
+        if (name.includes('HoaiMy')) name = 'Microsoft Hoài My (Tự nhiên)';
+        else if (name.includes('NamMinh')) name = 'Microsoft Nam Minh (Tự nhiên)';
+        else if (name.toLowerCase().includes('google')) name = 'Google Tiếng Việt';
+        noteEl.innerHTML = `<i class="ph-bold ph-check-circle text-emerald-600 text-sm"></i> Đang dùng: <strong class="text-emerald-950 font-bold">${name}</strong>`;
+      }
+    }
+
+    // Lắng nghe sự kiện giọng nạp xong từ trình duyệt
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        updateVoiceSelectUI();
+      };
     }
 
     // Personalized greeting for Trà My
@@ -645,6 +957,8 @@
       updateSettingsUI();
       if (userSettings.voiceEnabled) {
         speakGreeting(true);
+      } else {
+        stopSpeaking();
       }
     }
 
@@ -685,15 +999,32 @@
         activeThemeBtn.classList.add('bg-emerald-50', 'border-emerald-600', 'ring-2', 'ring-emerald-400');
       }
 
-      // Voice Toggle button styling
+      // Voice Toggle button styling & container visibility
       const toggleVoiceBtn = document.getElementById('toggleVoiceBtn');
+      const voiceControls = document.getElementById('voiceControlsContainer');
       if (userSettings.voiceEnabled) {
-        toggleVoiceBtn.className = 'px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base bg-emerald-600 text-white border-emerald-600';
+        toggleVoiceBtn.className = 'px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base bg-emerald-600 text-white border-emerald-600 shadow-sm';
         toggleVoiceBtn.textContent = 'Bật';
+        if (voiceControls) voiceControls.classList.remove('hidden');
       } else {
         toggleVoiceBtn.className = 'px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base bg-slate-100 text-slate-600 border-slate-300';
         toggleVoiceBtn.textContent = 'Tắt';
+        if (voiceControls) voiceControls.classList.add('hidden');
       }
+
+      // Voice Speed buttons highlight
+      document.querySelectorAll('.speed-select-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+      });
+      const activeSpeedBtn = document.getElementById(`speedBtn-${userSettings.voiceSpeed}`);
+      if (activeSpeedBtn) {
+        activeSpeedBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+        activeSpeedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+      }
+
+      // Refresh Voice Dropdown & status
+      updateVoiceSelectUI();
 
       // Font size buttons highlight
       document.querySelectorAll('.font-select-btn').forEach(btn => {
@@ -996,6 +1327,7 @@
     // Initialize Game
     function restartGame() {
       stopTimer();
+      stopSpeaking();
       flippedIndices = [];
       matchedIndices.clear();
       moves = 0;
