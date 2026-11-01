@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trò Chơi Luyện Trí Nhớ Thân Thiện</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons for senior-friendly clear iconography -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap');
+
+    body {
+      font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #F8F9FA;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 3D Card Flip styling */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-preserve-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Pulse animation for hints */
+    @keyframes gentlePulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+      50% { transform: scale(1.04); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4); }
+    }
+    .card-hint {
+      animation: gentlePulse 0.75s ease-in-out infinite;
+    }
+
+    /* Confetti particle style */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 14px;
+      opacity: 0.9;
+      pointer-events: none;
+      border-radius: 2px;
+      animation: fallDown 3s linear forwards;
+    }
+    @keyframes fallDown {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(80vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-amber-50/40 text-slate-800 flex flex-col justify-between p-3 sm:p-6 overflow-x-hidden">
+
+  <!-- Header Section -->
+  <header class="max-w-4xl mx-auto w-full mb-3 text-center">
+    <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+      <div class="flex items-center gap-2">
+        <span class="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl text-2xl shadow-sm">
+          <i class="ph-bold ph-brain"></i>
+        </span>
+        <div class="text-left">
+          <h1 class="text-2xl sm:text-3xl font-bold text-emerald-900 tracking-tight">Tìm Thẻ Cặp Giống Nhau</h1>
+          <p class="text-sm sm:text-base text-emerald-700 font-medium">Rèn luyện trí nhớ nhẹ nhàng, vui vẻ mỗi ngày</p>
+        </div>
+      </div>
+
+      <!-- Quick Audio, History & Settings Buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnHistory" onclick="openHistoryModal()" class="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 font-bold hover:bg-amber-100 active:scale-95 transition shadow-sm text-sm sm:text-base">
+          <i class="ph-bold ph-chart-line-up text-xl sm:text-2xl text-amber-600"></i>
+          <span>Lịch Sử</span>
+        </button>
+        <button id="btnSettings" onclick="openSettingsModal()" class="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-white border-2 border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-50 active:scale-95 transition shadow-sm text-sm sm:text-base">
+          <i class="ph-bold ph-gear text-xl sm:text-2xl text-emerald-700"></i>
+          <span>Cài Đặt</span>
+        </button>
+        <button id="btnSound" class="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white border-2 border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-50 active:scale-95 transition shadow-sm text-xs sm:text-sm">
+          <i id="soundIcon" class="ph-bold ph-speaker-high text-lg"></i>
+          <span id="soundText">Bật</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Personalized Welcome Banner for Trà My -->
+    <div id="welcomeBanner" class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl px-4 py-2.5 mb-2.5 shadow-md flex items-center justify-between transition-all transform duration-300">
+      <div class="flex items-center gap-2.5 text-left">
+        <span class="text-2xl sm:text-3xl animate-bounce">👋</span>
+        <div>
+          <h2 class="font-black text-base sm:text-lg tracking-wide text-amber-100">Chào bạn Trà My!</h2>
+          <p class="text-xs sm:text-sm text-emerald-50 font-medium">Chúc Trà My một buổi tập luyện trí nhớ thật vui vẻ và thoải mái!</p>
+        </div>
+      </div>
+      <button onclick="speakGreeting(true)" class="p-2 bg-white/20 hover:bg-white/30 rounded-xl text-white active:scale-90 transition text-lg" title="Nghe lại lời chào">
+        <i class="ph-bold ph-speaker-high"></i>
+      </button>
+    </div>
+
+    <!-- Active Theme Badge Indicator -->
+    <div class="flex items-center justify-center gap-2 mb-2 text-sm sm:text-base font-semibold text-emerald-900">
+      <span>Chủ đề hiện tại:</span>
+      <span id="activeThemeBadge" class="px-3 py-1 bg-emerald-100 border border-emerald-300 rounded-full text-emerald-800 font-bold flex items-center gap-1.5 shadow-sm">
+        🌿 Hoa & Cây trái
+      </span>
+    </div>
+
+    <!-- Difficulty Picker Bar -->
+    <div class="bg-white/90 backdrop-blur rounded-2xl p-2.5 shadow-sm border border-emerald-100 flex items-center justify-center gap-2 flex-wrap">
+      <span class="text-sm sm:text-base font-bold text-slate-700 mr-1 flex items-center gap-1">
+        <i class="ph-bold ph-sliders"></i> Cấp độ:
+      </span>
+      <button onclick="setDifficulty('easy')" id="btnDiffEasy" class="diff-btn px-4 py-2 rounded-xl text-base font-bold transition shadow-sm bg-emerald-600 text-white border-2 border-emerald-600">
+        🌱 Rất dễ (6 thẻ)
+      </button>
+      <button onclick="setDifficulty('medium')" id="btnDiffMedium" class="diff-btn px-4 py-2 rounded-xl text-base font-bold transition shadow-sm bg-white text-emerald-800 border-2 border-emerald-200 hover:bg-emerald-50">
+        🌿 Dễ (12 thẻ)
+      </button>
+      <button onclick="setDifficulty('hard')" id="btnDiffHard" class="diff-btn px-4 py-2 rounded-xl text-base font-bold transition shadow-sm bg-white text-emerald-800 border-2 border-emerald-200 hover:bg-emerald-50">
+        🌳 Vừa phải (16 thẻ)
+      </button>
+      <button onclick="setDifficulty('expert')" id="btnDiffExpert" class="diff-btn px-4 py-2 rounded-xl text-base font-bold transition shadow-sm bg-white text-emerald-800 border-2 border-emerald-200 hover:bg-emerald-50">
+        ⭐ Thử thách (20 thẻ)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Board Container -->
+  <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col items-center justify-center relative">
+    
+    <!-- Info bar: Pairs found, moves, hints -->
+    <div class="w-full max-w-2xl bg-emerald-900/5 rounded-2xl px-4 py-2.5 mb-3 flex items-center justify-around text-slate-700 font-bold text-sm sm:text-base border border-emerald-200/60 shadow-inner">
+      <div class="flex items-center gap-1.5 text-emerald-900">
+        <i class="ph-bold ph-check-circle text-emerald-600 text-xl"></i>
+        <span>Đã tìm: <strong id="pairsFoundText" class="text-lg text-emerald-700">0 / 3</strong></span>
+      </div>
+      <div class="flex items-center gap-1.5 text-slate-700">
+        <i class="ph-bold ph-hand-pointing text-amber-600 text-xl"></i>
+        <span>Số lần mở: <strong id="movesCountText" class="text-lg text-slate-800">0</strong></span>
+      </div>
+      <div class="flex items-center gap-1.5 text-slate-700">
+        <i class="ph-bold ph-clock text-blue-600 text-xl"></i>
+        <span>Thời gian: <strong id="timerText" class="text-lg text-slate-800">00:00</strong></span>
+      </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div id="gridContainer" class="w-full max-w-2xl grid gap-3 sm:gap-4 p-2 transition-all duration-300">
+      <!-- Cards dynamically generated here -->
+    </div>
+
+    <!-- Assistant & Action Bar -->
+    <div class="w-full max-w-2xl mt-4 flex items-center justify-between gap-3 flex-wrap">
+      <button id="btnHint" onclick="useHint()" class="flex-1 min-w-[140px] py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-95 transition flex items-center justify-center gap-2 text-base sm:text-lg">
+        <i class="ph-bold ph-lightbulb text-2xl"></i>
+        <span>Xem gợi ý</span>
+      </button>
+
+      <button id="btnPreview" onclick="previewCards()" class="flex-1 min-w-[140px] py-3.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-95 transition flex items-center justify-center gap-2 text-base sm:text-lg">
+        <i class="ph-bold ph-eye text-2xl"></i>
+        <span id="btnPreviewLabel">Xem trước (3 giây)</span>
+      </button>
+
+      <button onclick="restartGame()" class="flex-1 min-w-[140px] py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-95 transition flex items-center justify-center gap-2 text-base sm:text-lg">
+        <i class="ph-bold ph-arrows-clockwise text-2xl"></i>
+        <span>Chơi lại ván mới</span>
+      </button>
+    </div>
+
+    <!-- Motivational Tip Banner -->
+    <p id="motivationalTip" class="mt-3 text-emerald-800 text-sm sm:text-base font-semibold text-center italic bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+      💡 Chơi thật thong thả bạn nhé, không cần vội vàng đâu!
+    </p>
+
+    <!-- Confetti container -->
+    <div id="confettiContainer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl border-4 border-emerald-300 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-emerald-100 mb-4">
+          <h2 class="text-2xl font-extrabold text-emerald-900 flex items-center gap-2">
+            <i class="ph-bold ph-gear text-emerald-700 text-3xl"></i> Cài Đặt Trò Chơi
+          </h2>
+          <button onclick="closeSettingsModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-2xl font-bold transition">
+            <i class="ph-bold ph-x"></i>
+          </button>
+        </div>
+
+        <div class="space-y-5 text-left">
+          <!-- Theme Selection -->
+          <div>
+            <label class="block font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+              <i class="ph-bold ph-palette text-amber-600 text-2xl"></i> 1. Chủ đề hình ảnh
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button type="button" onclick="changeTheme('plants')" id="themeBtn-plants" class="theme-select-btn p-3 rounded-2xl border-2 text-left flex items-center gap-3 transition">
+                <span class="text-3xl">🌸</span>
+                <div>
+                  <div class="font-extrabold text-slate-800">Hoa & Trái cây</div>
+                  <div class="text-xs text-slate-500 font-medium">Hoa sen, quả táo, chuối...</div>
+                </div>
+              </button>
+              <button type="button" onclick="changeTheme('animals')" id="themeBtn-animals" class="theme-select-btn p-3 rounded-2xl border-2 text-left flex items-center gap-3 transition">
+                <span class="text-3xl">🐾</span>
+                <div>
+                  <div class="font-extrabold text-slate-800">Động vật thân quen</div>
+                  <div class="text-xs text-slate-500 font-medium">Mèo, chó, cá vàng, chim...</div>
+                </div>
+              </button>
+              <button type="button" onclick="changeTheme('memories')" id="themeBtn-memories" class="theme-select-btn p-3 rounded-2xl border-2 text-left flex items-center gap-3 transition">
+                <span class="text-3xl">📻</span>
+                <div>
+                  <div class="font-extrabold text-slate-800">Kỷ vật & Đồ dùng xưa</div>
+                  <div class="text-xs text-slate-500 font-medium">Ấm trà, quạt nan, xe đạp...</div>
+                </div>
+              </button>
+              <button type="button" onclick="changeTheme('food')" id="themeBtn-food" class="theme-select-btn p-3 rounded-2xl border-2 text-left flex items-center gap-3 transition">
+                <span class="text-3xl">🍲</span>
+                <div>
+                  <div class="font-extrabold text-slate-800">Món ăn truyền thống</div>
+                  <div class="text-xs text-slate-500 font-medium">Bát phở, bánh chưng, bắp...</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Text-to-Speech Toggle -->
+          <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-11 h-11 bg-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                <i class="ph-bold ph-megaphone"></i>
+              </span>
+              <div>
+                <div class="font-extrabold text-emerald-950 text-base sm:text-lg">Đọc tên thẻ (Giọng nói)</div>
+                <div class="text-xs sm:text-sm text-emerald-800 font-medium">Tự động phát âm tiếng Việt khi mở thẻ</div>
+              </div>
+            </div>
+            <button id="toggleVoiceBtn" onclick="toggleVoice()" class="px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base">
+              Bật
+            </button>
+          </div>
+
+          <!-- Font Size Selection -->
+          <div>
+            <label class="block font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+              <i class="ph-bold ph-text-aa text-blue-600 text-2xl"></i> 3. Cỡ chữ trên thẻ bài
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setFontSize('normal')" id="fontBtn-normal" class="font-select-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-sm">
+                Vừa vặn
+              </button>
+              <button type="button" onclick="setFontSize('large')" id="fontBtn-large" class="font-select-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-base">
+                To rõ
+              </button>
+              <button type="button" onclick="setFontSize('xlarge')" id="fontBtn-xlarge" class="font-select-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-lg">
+                Siêu to
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview Duration Selection -->
+          <div>
+            <label class="block font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+              <i class="ph-bold ph-timer text-purple-600 text-2xl"></i> 4. Thời gian hiển thị xem trước
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setPreviewDuration(3)" id="previewDurationBtn-3" class="preview-duration-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-base">
+                3 giây
+              </button>
+              <button type="button" onclick="setPreviewDuration(5)" id="previewDurationBtn-5" class="preview-duration-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-base">
+                5 giây
+              </button>
+              <button type="button" onclick="setPreviewDuration(7)" id="previewDurationBtn-7" class="preview-duration-btn py-3 px-2 rounded-2xl border-2 text-center font-bold transition text-base">
+                7 giây
+              </button>
+            </div>
+          </div>
+
+          <!-- Comparison Timeframe Setting -->
+          <div>
+            <label class="block font-bold text-slate-800 text-lg mb-2 flex items-center gap-2">
+              <i class="ph-bold ph-calendar-check text-emerald-700 text-2xl"></i> 5. Khoảng thời gian so sánh thứ bậc
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" onclick="setTimeframeFilter('1day')" id="tfBtn-1day" class="timeframe-btn py-2.5 px-2 rounded-2xl border-2 text-center font-bold transition text-sm">
+                1 ngày
+              </button>
+              <button type="button" onclick="setTimeframeFilter('3days')" id="tfBtn-3days" class="timeframe-btn py-2.5 px-2 rounded-2xl border-2 text-center font-bold transition text-sm">
+                3 ngày
+              </button>
+              <button type="button" onclick="setTimeframeFilter('7days')" id="tfBtn-7days" class="timeframe-btn py-2.5 px-2 rounded-2xl border-2 text-center font-bold transition text-sm">
+                7 ngày
+              </button>
+              <button type="button" onclick="setTimeframeFilter('1month')" id="tfBtn-1month" class="timeframe-btn py-2.5 px-2 rounded-2xl border-2 text-center font-bold transition text-sm">
+                1 tháng
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex gap-3">
+          <button onclick="closeSettingsModal()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-md transition active:scale-95 text-lg">
+            Xong & Tiếp tục chơi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History & Ranking Modal -->
+    <div id="historyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-2xl w-full shadow-2xl border-4 border-amber-300 max-h-[92vh] overflow-y-auto flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-amber-100 mb-4">
+          <h2 class="text-2xl font-extrabold text-amber-950 flex items-center gap-2">
+            <i class="ph-bold ph-medal text-amber-600 text-3xl"></i> Lịch Sử & Thứ Hạng
+          </h2>
+          <button onclick="closeHistoryModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-2xl font-bold transition">
+            <i class="ph-bold ph-x"></i>
+          </button>
+        </div>
+
+        <!-- History Filter Bar -->
+        <div class="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 mb-4 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <span class="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+            <i class="ph-bold ph-funnel"></i> Mốc so sánh:
+          </span>
+          <div class="flex items-center gap-1.5 flex-wrap justify-center">
+            <button onclick="changeHistoryTimeframe('1day')" id="histTf-1day" class="hist-filter-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition border border-amber-300">1 ngày</button>
+            <button onclick="changeHistoryTimeframe('3days')" id="histTf-3days" class="hist-filter-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition border border-amber-300">3 ngày</button>
+            <button onclick="changeHistoryTimeframe('7days')" id="histTf-7days" class="hist-filter-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition border border-amber-300">7 ngày</button>
+            <button onclick="changeHistoryTimeframe('1month')" id="histTf-1month" class="hist-filter-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition border border-amber-300">1 tháng</button>
+            <button onclick="changeHistoryTimeframe('all')" id="histTf-all" class="hist-filter-btn px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition border border-amber-300">Tất cả</button>
+          </div>
+        </div>
+
+        <!-- Personalized encouragement summary for Trà My -->
+        <div id="historySummaryCard" class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl mb-4 text-emerald-950 text-sm sm:text-base font-semibold flex items-center gap-3">
+          <span class="text-3xl">🏆</span>
+          <div id="historySummaryText">Đang tải bảng xếp hạng của bạn Trà My...</div>
+        </div>
+
+        <!-- Records Table Container -->
+        <div class="overflow-x-auto flex-1 rounded-2xl border border-slate-200 mb-4">
+          <table class="w-full text-left text-xs sm:text-sm border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-extrabold uppercase tracking-wider">
+              <tr>
+                <th class="p-3 text-center">Hạng</th>
+                <th class="p-3">Thời điểm</th>
+                <th class="p-3">Cấp độ</th>
+                <th class="p-3 text-center">Thời gian</th>
+                <th class="p-3 text-center">Lượt lật</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <button onclick="clearGameHistory()" class="px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl font-bold transition border border-rose-200">
+            Xóa lịch sử
+          </button>
+          <button onclick="closeHistoryModal()" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow transition active:scale-95 text-base">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Modal Dialog (Personalized for Trà My with Rank Comparison) -->
+    <div id="victoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl border-4 border-emerald-400 transform scale-100 transition duration-300 max-h-[92vh] overflow-y-auto">
+        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-4xl mb-3 shadow-inner">
+          <i class="ph-bold ph-trophy"></i>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-emerald-950 mb-1">Xuất Sắc Lắm, Bạn Trà My!</h2>
+        
+        <!-- Verbal & Written Summary text -->
+        <p class="text-base sm:text-lg text-emerald-800 mb-4 font-bold" id="victoryPersonalSummary">
+          <!-- Dynamically populated: Bạn Trà My đã hoàn thành trò chơi trong X phút Y giây... -->
+        </p>
+
+        <!-- Rank comparison highlight badge -->
+        <div id="victoryRankBadge" class="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-100 border-2 border-amber-300 rounded-2xl p-3.5 mb-4 text-amber-950 font-bold text-sm sm:text-base shadow-sm">
+          <!-- Ranking comparison result injected here -->
+        </div>
+
+        <p class="text-sm sm:text-base text-slate-600 mb-4 font-medium italic" id="victoryPraise">
+          <!-- Personalized positive affirmation for Trà My -->
+        </p>
+
+        <!-- Results Summary Box -->
+        <div class="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-200 flex justify-around text-slate-800">
+          <div>
+            <span class="block text-xs uppercase tracking-wide font-bold text-slate-500">Số lượt lật</span>
+            <span id="finalMoves" class="text-2xl font-extrabold text-emerald-700">12</span>
+          </div>
+          <div class="border-r border-slate-200"></div>
+          <div>
+            <span class="block text-xs uppercase tracking-wide font-bold text-slate-500">Thời gian</span>
+            <span id="finalTime" class="text-2xl font-extrabold text-emerald-700">01:15</span>
+          </div>
+          <div class="border-r border-slate-200"></div>
+          <div>
+            <span class="block text-xs uppercase tracking-wide font-bold text-slate-500">Cấp độ</span>
+            <span id="finalDiff" class="text-base font-extrabold text-emerald-700 mt-1 block">6 thẻ</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button onclick="closeVictoryModal(); restartGame();" class="flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-lg transition active:scale-95 text-lg flex items-center justify-center gap-2">
+            <i class="ph-bold ph-play"></i> Chơi Ván Mới
+          </button>
+          <button onclick="openHistoryModalFromVictory()" class="py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow transition active:scale-95 text-base flex items-center justify-center gap-1.5">
+            <i class="ph-bold ph-chart-line-up"></i> Bảng Thứ Hạng
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-4 text-center text-xs sm:text-sm text-slate-500 font-medium">
+    Bài tập trí nhớ nhẹ nhàng cho sức khỏe não bộ • Thiết kế thân thiện cho người lớn tuổi
+  </footer>
+
+  <script>
+    /* Multi-theme database with rich Vietnamese everyday items */
+    const THEMES_DATA = {
+      plants: {
+        name: 'Hoa & Trái cây',
+        badge: '🌸 Hoa & Trái cây',
+        items: [
+          { id: 'apple', name: 'Quả táo', icon: '🍎', color: 'from-rose-50 to-red-100', textCol: 'text-red-900' },
+          { id: 'banana', name: 'Quả chuối', icon: '🍌', color: 'from-amber-50 to-yellow-100', textCol: 'text-amber-900' },
+          { id: 'lotus', name: 'Hoa sen', icon: '🪷', color: 'from-pink-50 to-rose-100', textCol: 'text-rose-900' },
+          { id: 'rose', name: 'Hoa hồng', icon: '🌹', color: 'from-rose-50 to-red-200', textCol: 'text-rose-950' },
+          { id: 'watermelon', name: 'Dưa hấu', icon: '🍉', color: 'from-emerald-50 to-red-100', textCol: 'text-emerald-950' },
+          { id: 'orange', name: 'Quả cam', icon: '🍊', color: 'from-orange-50 to-amber-100', textCol: 'text-orange-950' },
+          { id: 'sunflower', name: 'Hướng dương', icon: '🌻', color: 'from-yellow-50 to-amber-200', textCol: 'text-amber-950' },
+          { id: 'leaf', name: 'Chiếc lá', icon: '🍃', color: 'from-lime-50 to-emerald-100', textCol: 'text-emerald-950' },
+          { id: 'strawberry', name: 'Dâu tây', icon: '🍓', color: 'from-rose-50 to-pink-100', textCol: 'text-rose-950' },
+          { id: 'grapes', name: 'Chùm nho', icon: '🍇', color: 'from-purple-50 to-violet-100', textCol: 'text-purple-950' },
+          { id: 'peach', name: 'Quả đào', icon: '🍑', color: 'from-orange-50 to-pink-100', textCol: 'text-orange-900' },
+          { id: 'mango', name: 'Quả xoài', icon: '🥭', color: 'from-yellow-50 to-orange-100', textCol: 'text-amber-950' }
+        ]
+      },
+      animals: {
+        name: 'Động vật thân quen',
+        badge: '🐾 Động vật thân quen',
+        items: [
+          { id: 'cat', name: 'Mèo con', icon: '🐱', color: 'from-orange-50 to-amber-100', textCol: 'text-orange-950' },
+          { id: 'dog', name: 'Cún con', icon: '🐶', color: 'from-yellow-50 to-amber-100', textCol: 'text-amber-950' },
+          { id: 'rabbit', name: 'Chú thỏ', icon: '🐰', color: 'from-pink-50 to-rose-100', textCol: 'text-pink-950' },
+          { id: 'bird', name: 'Chú chim', icon: '🕊️', color: 'from-slate-50 to-sky-100', textCol: 'text-sky-950' },
+          { id: 'fish', name: 'Cá vàng', icon: '🐠', color: 'from-amber-50 to-cyan-100', textCol: 'text-cyan-950' },
+          { id: 'butterfly', name: 'Bướm xinh', icon: '🦋', color: 'from-violet-50 to-purple-100', textCol: 'text-violet-950' },
+          { id: 'turtle', name: 'Chú rùa', icon: '🐢', color: 'from-lime-50 to-emerald-100', textCol: 'text-emerald-950' },
+          { id: 'duck', name: 'Vịt con', icon: '🦆', color: 'from-yellow-50 to-emerald-100', textCol: 'text-yellow-950' },
+          { id: 'rooster', name: 'Gà trống', icon: '🐓', color: 'from-red-50 to-amber-100', textCol: 'text-red-950' },
+          { id: 'horse', name: 'Chú ngựa', icon: '🐴', color: 'from-amber-50 to-stone-200', textCol: 'text-stone-900' },
+          { id: 'dolphin', name: 'Cá heo', icon: '🐬', color: 'from-sky-50 to-blue-100', textCol: 'text-blue-950' },
+          { id: 'panda', name: 'Gấu trúc', icon: '🐼', color: 'from-zinc-50 to-slate-200', textCol: 'text-slate-900' }
+        ]
+      },
+      memories: {
+        name: 'Kỷ vật & Đồ dùng xưa',
+        badge: '📻 Kỷ vật xưa',
+        items: [
+          { id: 'teapot', name: 'Ấm trà', icon: '🫖', color: 'from-emerald-50 to-teal-100', textCol: 'text-emerald-950' },
+          { id: 'bike', name: 'Xe đạp', icon: '🚲', color: 'from-cyan-50 to-blue-100', textCol: 'text-blue-900' },
+          { id: 'fan', name: 'Quạt nan', icon: '🪭', color: 'from-amber-50 to-orange-100', textCol: 'text-amber-900' },
+          { id: 'clock', name: 'Đồng hồ', icon: '⏰', color: 'from-red-50 to-rose-100', textCol: 'text-rose-900' },
+          { id: 'radio', name: 'Đài Radio', icon: '📻', color: 'from-stone-50 to-amber-100', textCol: 'text-stone-900' },
+          { id: 'lamp', name: 'Đèn dầu', icon: '🪔', color: 'from-yellow-50 to-amber-200', textCol: 'text-amber-950' },
+          { id: 'mail', name: 'Bức thư', icon: '✉️', color: 'from-slate-50 to-blue-100', textCol: 'text-blue-950' },
+          { id: 'scissors', name: 'Cái kéo', icon: '✂️', color: 'from-zinc-50 to-slate-200', textCol: 'text-zinc-900' },
+          { id: 'camera', name: 'Máy ảnh', icon: '📷', color: 'from-slate-50 to-zinc-200', textCol: 'text-slate-950' },
+          { id: 'umbrella', name: 'Chiếc ô', icon: '☂️', color: 'from-indigo-50 to-purple-100', textCol: 'text-indigo-950' },
+          { id: 'key', name: 'Chìa khóa', icon: '🔑', color: 'from-yellow-50 to-amber-200', textCol: 'text-amber-950' },
+          { id: 'book', name: 'Quyển sách', icon: '📖', color: 'from-amber-50 to-orange-100', textCol: 'text-amber-950' }
+        ]
+      },
+      food: {
+        name: 'Món ăn truyền thống',
+        badge: '🍲 Món ăn truyền thống',
+        items: [
+          { id: 'pho', name: 'Bát phở', icon: '🍜', color: 'from-amber-50 to-yellow-100', textCol: 'text-amber-950' },
+          { id: 'rice', name: 'Bát cơm', icon: '🍚', color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'tea', name: 'Cốc trà', icon: '🍵', color: 'from-emerald-50 to-green-100', textCol: 'text-emerald-900' },
+          { id: 'corn', name: 'Trái bắp', icon: '🌽', color: 'from-yellow-50 to-amber-100', textCol: 'text-amber-900' },
+          { id: 'coconut', name: 'Trái dừa', icon: '🥥', color: 'from-stone-50 to-amber-100', textCol: 'text-stone-900' },
+          { id: 'bread', name: 'Bánh mì', icon: '🥖', color: 'from-amber-50 to-yellow-200', textCol: 'text-amber-950' },
+          { id: 'egg', name: 'Quả trứng', icon: '🥚', color: 'from-stone-50 to-yellow-100', textCol: 'text-stone-900' },
+          { id: 'coffee', name: 'Cà phê', icon: '☕', color: 'from-amber-50 to-orange-100', textCol: 'text-amber-950' },
+          { id: 'cake', name: 'Chiếc bánh', icon: '🧁', color: 'from-pink-50 to-rose-100', textCol: 'text-rose-950' },
+          { id: 'sweet_potato', name: 'Củ khoai', icon: '🍠', color: 'from-purple-50 to-amber-100', textCol: 'text-purple-950' },
+          { id: 'dumpling', name: 'Bánh bao', icon: '🥟', color: 'from-stone-50 to-yellow-50', textCol: 'text-stone-900' },
+          { id: 'pot', name: 'Nồi lẩu', icon: '🍲', color: 'from-orange-50 to-amber-100', textCol: 'text-orange-950' }
+        ]
+      }
+    };
+
+    const ENCOURAGING_QUOTES = [
+      "💡 Chơi thật thong thả bạn nhé, không cần vội vàng đâu!",
+      "🌟 Mỗi lượt lật thẻ là một lần tập thể dục cho não bộ đấy!",
+      "🌸 Hãy hít thở sâu và thư giãn, bạn đang làm rất tốt!",
+      "👏 Rất tuyệt vời! Đừng ngại lật thử nhiều lần nhé."
+    ];
+
+    // Difficulty settings
+    const DIFFICULTIES = {
+      easy: { pairs: 3, cols: 'grid-cols-2 sm:grid-cols-3', name: 'Rất dễ (6 thẻ)' },
+      medium: { pairs: 6, cols: 'grid-cols-3 sm:grid-cols-4', name: 'Dễ (12 thẻ)' },
+      hard: { pairs: 8, cols: 'grid-cols-4 sm:grid-cols-4', name: 'Vừa phải (16 thẻ)' },
+      expert: { pairs: 10, cols: 'grid-cols-4 sm:grid-cols-5', name: 'Thử thách (20 thẻ)' }
+    };
+
+    // User Preferences (with LocalStorage support)
+    let userSettings = {
+      theme: 'plants',
+      voiceEnabled: true,
+      fontSize: 'large', // normal, large, xlarge
+      previewDuration: 3, // 3s, 5s, 7s (default 3s)
+      timeframe: '7days', // 1day, 3days, 7days, 1month
+      soundEnabled: true
+    };
+
+    // History logs in localStorage
+    let gameHistory = [];
+
+    // Load settings & history from localStorage
+    try {
+      const savedSettings = localStorage.getItem('memory_game_settings');
+      if (savedSettings) {
+        userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+        if (![3, 5, 7].includes(userSettings.previewDuration)) {
+          userSettings.previewDuration = 3;
+        }
+        if (!['1day', '3days', '7days', '1month'].includes(userSettings.timeframe)) {
+          userSettings.timeframe = '7days';
+        }
+      }
+      const savedHistory = localStorage.getItem('memory_game_history');
+      if (savedHistory) {
+        gameHistory = JSON.parse(savedHistory) || [];
+      }
+    } catch (e) {
+      console.warn('Could not read localStorage', e);
+    }
+
+    let currentDifficulty = 'easy';
+    let currentHistoryTimeframe = userSettings.timeframe || '7days';
+    let cards = [];
+    let flippedIndices = [];
+    let matchedIndices = new Set();
+    let moves = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isLocked = false;
+    let soundEnabled = userSettings.soundEnabled;
+
+    function saveSettings() {
+      try {
+        localStorage.setItem('memory_game_settings', JSON.stringify(userSettings));
+      } catch (e) {
+        console.warn('Could not save localStorage', e);
+      }
+    }
+
+    function saveHistory() {
+      try {
+        localStorage.setItem('memory_game_history', JSON.stringify(gameHistory));
+      } catch (e) {
+        console.warn('Could not save game history', e);
+      }
+    }
+
+    // Text to Speech (TTS) for Vietnamese reading
+    function speakText(text) {
+      if (!userSettings.voiceEnabled) return;
+      if (!('speechSynthesis' in window)) return;
+
+      try {
+        window.speechSynthesis.cancel(); // cancel any active utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 0.82; // Gentle, very clear pacing for senior listeners
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.warn('SpeechSynthesis error:', err);
+      }
+    }
+
+    // Personalized greeting for Trà My
+    function speakGreeting(force = false) {
+      if (!userSettings.voiceEnabled && !force) return;
+      speakText('Chào bạn Trà My! Chúc bạn có một ván chơi thật vui vẻ và minh mẫn.');
+    }
+
+    // Modal Controls
+    function openSettingsModal() {
+      updateSettingsUI();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function openHistoryModal() {
+      renderHistoryModal();
+      document.getElementById('historyModal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+    function openHistoryModalFromVictory() {
+      closeVictoryModal();
+      openHistoryModal();
+    }
+
+    function changeTheme(themeKey) {
+      if (!THEMES_DATA[themeKey]) return;
+      userSettings.theme = themeKey;
+      saveSettings();
+      updateSettingsUI();
+      restartGame();
+    }
+
+    function toggleVoice() {
+      userSettings.voiceEnabled = !userSettings.voiceEnabled;
+      saveSettings();
+      updateSettingsUI();
+      if (userSettings.voiceEnabled) {
+        speakGreeting(true);
+      }
+    }
+
+    function setFontSize(size) {
+      userSettings.fontSize = size;
+      saveSettings();
+      updateSettingsUI();
+      renderGrid();
+    }
+
+    function setPreviewDuration(seconds) {
+      userSettings.previewDuration = Number(seconds) || 3;
+      saveSettings();
+      updateSettingsUI();
+    }
+
+    function setTimeframeFilter(tf) {
+      userSettings.timeframe = tf;
+      currentHistoryTimeframe = tf;
+      saveSettings();
+      updateSettingsUI();
+    }
+
+    function changeHistoryTimeframe(tf) {
+      currentHistoryTimeframe = tf;
+      renderHistoryModal();
+    }
+
+    function updateSettingsUI() {
+      // Theme buttons highlight
+      document.querySelectorAll('.theme-select-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-50', 'border-emerald-600', 'ring-2', 'ring-emerald-400');
+        btn.classList.add('bg-white', 'border-slate-200');
+      });
+      const activeThemeBtn = document.getElementById(`themeBtn-${userSettings.theme}`);
+      if (activeThemeBtn) {
+        activeThemeBtn.classList.remove('bg-white', 'border-slate-200');
+        activeThemeBtn.classList.add('bg-emerald-50', 'border-emerald-600', 'ring-2', 'ring-emerald-400');
+      }
+
+      // Voice Toggle button styling
+      const toggleVoiceBtn = document.getElementById('toggleVoiceBtn');
+      if (userSettings.voiceEnabled) {
+        toggleVoiceBtn.className = 'px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base bg-emerald-600 text-white border-emerald-600';
+        toggleVoiceBtn.textContent = 'Bật';
+      } else {
+        toggleVoiceBtn.className = 'px-4 py-2 rounded-xl font-bold transition border-2 text-sm sm:text-base bg-slate-100 text-slate-600 border-slate-300';
+        toggleVoiceBtn.textContent = 'Tắt';
+      }
+
+      // Font size buttons highlight
+      document.querySelectorAll('.font-select-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+      });
+      const activeFontBtn = document.getElementById(`fontBtn-${userSettings.fontSize}`);
+      if (activeFontBtn) {
+        activeFontBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+        activeFontBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+      }
+
+      // Preview duration buttons highlight
+      document.querySelectorAll('.preview-duration-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+      });
+      const activeDurationBtn = document.getElementById(`previewDurationBtn-${userSettings.previewDuration}`);
+      if (activeDurationBtn) {
+        activeDurationBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+        activeDurationBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+      }
+
+      // Timeframe buttons highlight in settings
+      document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+      });
+      const activeTfBtn = document.getElementById(`tfBtn-${userSettings.timeframe}`);
+      if (activeTfBtn) {
+        activeTfBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+        activeTfBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+      }
+
+      // Update preview button text
+      const previewLabel = document.getElementById('btnPreviewLabel');
+      if (previewLabel) {
+        previewLabel.textContent = `Xem trước (${userSettings.previewDuration} giây)`;
+      }
+
+      // Update badge
+      const activeThemeObj = THEMES_DATA[userSettings.theme] || THEMES_DATA.plants;
+      document.getElementById('activeThemeBadge').textContent = activeThemeObj.badge;
+    }
+
+    // Timeframe range filter helper
+    function getMillisecondsForTimeframe(tf) {
+      const now = Date.now();
+      switch (tf) {
+        case '1day': return now - (24 * 60 * 60 * 1000);
+        case '3days': return now - (3 * 24 * 60 * 60 * 1000);
+        case '7days': return now - (7 * 24 * 60 * 60 * 1000);
+        case '1month': return now - (30 * 24 * 60 * 60 * 1000);
+        default: return 0; // 'all'
+      }
+    }
+
+    function getTimeframeLabel(tf) {
+      switch (tf) {
+        case '1day': return '1 ngày qua';
+        case '3days': return '3 ngày qua';
+        case '7days': return '7 ngày qua';
+        case '1month': return '1 tháng qua';
+        default: return 'toàn bộ lịch sử';
+      }
+    }
+
+    // Format seconds to Vietnamese friendly text: e.g. "1 phút 15 giây"
+    function formatTimeVietnamese(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      if (minutes > 0) {
+        return `${minutes} phút ${seconds} giây`;
+      }
+      return `${seconds} giây`;
+    }
+
+    // Render history modal content
+    function renderHistoryModal() {
+      // Update filter tabs
+      document.querySelectorAll('.hist-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-600', 'text-white', 'border-amber-600');
+        btn.classList.add('bg-white', 'text-amber-900', 'border-amber-300');
+      });
+      const activeTab = document.getElementById(`histTf-${currentHistoryTimeframe}`);
+      if (activeTab) {
+        activeTab.classList.remove('bg-white', 'text-amber-900', 'border-amber-300');
+        activeTab.classList.add('bg-amber-600', 'text-white', 'border-amber-600');
+      }
+
+      const threshold = getMillisecondsForTimeframe(currentHistoryTimeframe);
+      const filtered = gameHistory.filter(item => item.timestamp >= threshold);
+
+      // Sort by best score: primary key = timeSeconds ASC, secondary = moves ASC
+      const sorted = [...filtered].sort((a, b) => {
+        if (a.timeSeconds !== b.timeSeconds) return a.timeSeconds - b.timeSeconds;
+        return a.moves - b.moves;
+      });
+
+      const summaryCard = document.getElementById('historySummaryText');
+      if (filtered.length === 0) {
+        summaryCard.textContent = `Bạn Trà My chưa có kết quả nào trong ${getTimeframeLabel(currentHistoryTimeframe)}. Hãy hoàn thành một ván chơi nhé!`;
+      } else {
+        const best = sorted[0];
+        summaryCard.innerHTML = `Bạn Trà My đã hoàn thành <strong>${filtered.length} lượt chơi</strong> trong ${getTimeframeLabel(currentHistoryTimeframe)}. Thành tích tốt nhất: <strong>${formatTimeVietnamese(best.timeSeconds)}</strong> (${DIFFICULTIES[best.difficulty].name})!`;
+      }
+
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-medium">Chưa có kết quả nào trong thời gian này</td></tr>`;
+        return;
+      }
+
+      sorted.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.className = index < 3 ? 'bg-amber-50/40 hover:bg-amber-50' : 'hover:bg-slate-50';
+
+        let rankBadge = `<span class="inline-block w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-bold leading-7 text-center">${index + 1}</span>`;
+        if (index === 0) rankBadge = `<span class="inline-block w-7 h-7 rounded-full bg-amber-400 text-amber-950 font-black leading-7 text-center shadow-sm">🥇 1</span>`;
+        if (index === 1) rankBadge = `<span class="inline-block w-7 h-7 rounded-full bg-slate-300 text-slate-800 font-bold leading-7 text-center shadow-sm">🥈 2</span>`;
+        if (index === 2) rankBadge = `<span class="inline-block w-7 h-7 rounded-full bg-amber-200 text-amber-900 font-bold leading-7 text-center shadow-sm">🥉 3</span>`;
+
+        const dateObj = new Date(item.timestamp);
+        const dateStr = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
+
+        row.innerHTML = `
+          <td class="p-3 text-center">${rankBadge}</td>
+          <td class="p-3 text-slate-500 font-medium">${dateStr}</td>
+          <td class="p-3 font-bold text-slate-800">${DIFFICULTIES[item.difficulty] ? DIFFICULTIES[item.difficulty].name : item.difficulty}</td>
+          <td class="p-3 text-center font-extrabold text-emerald-800">${formatTimeVietnamese(item.timeSeconds)}</td>
+          <td class="p-3 text-center font-bold text-slate-700">${item.moves} lượt</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function clearGameHistory() {
+      if (confirm('Bạn Trà My có muốn xóa sạch lịch sử chơi để bắt đầu bảng xếp hạng mới không?')) {
+        gameHistory = [];
+        saveHistory();
+        renderHistoryModal();
+      }
+    }
+
+    // Web Audio Synthesizer for warm, gentle tones without external sound files
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'flip') {
+          // Soft wooden tap sound
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.08);
+
+        } else if (type === 'match') {
+          // Cheerful harmonious major triad chime (C5, E5, G5)
+          const notes = [523.25, 659.25, 783.99];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+
+            gain.gain.setValueAtTime(0.25, now + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.1);
+            osc.stop(now + idx * 0.1 + 0.45);
+          });
+
+        } else if (type === 'hint') {
+          // Subtle shimmer tone
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.linearRampToValueAtTime(900, now + 0.2);
+
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+
+        } else if (type === 'victory') {
+          // Joyful gentle victory arpeggio
+          const victoryNotes = [392, 523.25, 659.25, 783.99, 1046.5];
+          victoryNotes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+            gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.6);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.65);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio context error:', e);
+      }
+    }
+
+    // Sound toggle button
+    document.getElementById('btnSound').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      userSettings.soundEnabled = soundEnabled;
+      saveSettings();
+      const soundText = document.getElementById('soundText');
+      const soundIcon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        soundText.textContent = 'Âm thanh: Bật';
+        soundIcon.className = 'ph-bold ph-speaker-high text-xl';
+        playSound('hint');
+      } else {
+        soundText.textContent = 'Âm thanh: Tắt';
+        soundIcon.className = 'ph-bold ph-speaker-slash text-xl text-slate-400';
+      }
+    });
+
+    // Difficulty selection
+    function setDifficulty(diff) {
+      if (currentDifficulty === diff && cards.length > 0) return;
+      currentDifficulty = diff;
+
+      // Update UI button state
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+        btn.classList.add('bg-white', 'text-emerald-800', 'border-emerald-200');
+      });
+      const activeBtn = document.getElementById('btnDiff' + diff.charAt(0).toUpperCase() + diff.slice(1));
+      activeBtn.classList.remove('bg-white', 'text-emerald-800', 'border-emerald-200');
+      activeBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+
+      restartGame();
+    }
+
+    // Timer helpers
+    function startTimer() {
+      stopTimer();
+      timerSeconds = 0;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timerSeconds / 60);
+      const seconds = timerSeconds % 60;
+      const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById('timerText').textContent = formatted;
+      return formatted;
+    }
+
+    // Initialize Game
+    function restartGame() {
+      stopTimer();
+      flippedIndices = [];
+      matchedIndices.clear();
+      moves = 0;
+      isLocked = false;
+      document.getElementById('movesCountText').textContent = '0';
+      
+      const config = DIFFICULTIES[currentDifficulty];
+      document.getElementById('pairsFoundText').textContent = `0 / ${config.pairs}`;
+
+      // Set random motivational tip
+      const randomTip = ENCOURAGING_QUOTES[Math.floor(Math.random() * ENCOURAGING_QUOTES.length)];
+      document.getElementById('motivationalTip').textContent = randomTip;
+
+      // Get current theme pool
+      const themeObj = THEMES_DATA[userSettings.theme] || THEMES_DATA.plants;
+      const pool = [...themeObj.items].sort(() => 0.5 - Math.random());
+      const selectedItems = pool.slice(0, config.pairs);
+
+      // Create pairs and duplicate
+      const deck = [...selectedItems, ...selectedItems]
+        .map((item, index) => ({ ...item, uniqueId: index }))
+        .sort(() => 0.5 - Math.random());
+
+      cards = deck;
+
+      renderGrid();
+      startTimer();
+
+      // Play soft greeting audio chime & speech greeting
+      playSound('hint');
+      speakGreeting();
+    }
+
+    // Get Font styling classes depending on setting
+    function getCardFontClasses() {
+      switch (userSettings.fontSize) {
+        case 'normal':
+          return {
+            icon: 'text-3xl sm:text-4xl md:text-5xl',
+            text: 'text-xs sm:text-sm font-bold'
+          };
+        case 'xlarge':
+          return {
+            icon: 'text-5xl sm:text-6xl md:text-7xl',
+            text: 'text-base sm:text-xl md:text-2xl font-black'
+          };
+        case 'large':
+        default:
+          return {
+            icon: 'text-4xl sm:text-5xl md:text-6xl',
+            text: 'text-sm sm:text-lg font-extrabold'
+          };
+      }
+    }
+
+    // Render cards to the DOM
+    function renderGrid() {
+      const container = document.getElementById('gridContainer');
+      const config = DIFFICULTIES[currentDifficulty];
+      const fontClasses = getCardFontClasses();
+
+      // Update grid layout classes
+      container.className = `w-full max-w-2xl grid gap-3 sm:gap-4 p-2 transition-all duration-300 ${config.cols}`;
+      container.innerHTML = '';
+
+      cards.forEach((card, index) => {
+        const isMatched = matchedIndices.has(index);
+        const isFlipped = flippedIndices.includes(index) || isMatched;
+
+        const cardElem = document.createElement('div');
+        cardElem.id = `card-${index}`;
+        cardElem.className = 'perspective-1000 aspect-square sm:aspect-[4/4.5] cursor-pointer';
+        cardElem.onclick = () => handleCardClick(index);
+
+        cardElem.innerHTML = `
+          <div class="card-inner relative w-full h-full transform-style-preserve-3d transition-transform duration-500 rounded-2xl shadow-sm hover:shadow-md ${isFlipped ? 'rotate-y-180' : ''}">
+            
+            <!-- Card Back (Visible when face-down) -->
+            <div class="card-back absolute inset-0 backface-hidden bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl border-2 sm:border-4 border-emerald-400/80 flex flex-col items-center justify-center p-2 shadow-sm">
+              <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center text-white/90 text-2xl sm:text-3xl font-bold mb-1 shadow-inner">
+                <i class="ph-bold ph-flower-lotus"></i>
+              </div>
+              <span class="text-xs sm:text-sm font-bold tracking-wider text-emerald-100">CHẠM MỞ</span>
+            </div>
+
+            <!-- Card Front (Face-up) -->
+            <div class="card-front absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-b ${card.color} rounded-2xl border-2 sm:border-4 border-emerald-500 flex flex-col items-center justify-center p-2 text-center shadow-md ${isMatched ? 'ring-4 ring-emerald-400 bg-emerald-100' : ''}">
+              <span class="${fontClasses.icon} filter drop-shadow-sm mb-1">${card.icon}</span>
+              <span class="${fontClasses.text} ${card.textCol} tracking-tight leading-tight">${card.name}</span>
+            </div>
+
+          </div>
+        `;
+
+        container.appendChild(cardElem);
+      });
+    }
+
+    // Click handler for cards
+    function handleCardClick(index) {
+      if (isLocked) return;
+      if (matchedIndices.has(index)) return;
+      if (flippedIndices.includes(index)) return;
+
+      playSound('flip');
+      const clickedCard = cards[index];
+      speakText(clickedCard.name);
+
+      flipCard(index, true);
+      flippedIndices.push(index);
+
+      if (flippedIndices.length === 2) {
+        moves++;
+        document.getElementById('movesCountText').textContent = moves;
+        checkMatch();
+      }
+    }
+
+    function flipCard(index, show) {
+      const cardInner = document.querySelector(`#card-${index} .card-inner`);
+      if (!cardInner) return;
+      if (show) {
+        cardInner.classList.add('rotate-y-180');
+      } else {
+        cardInner.classList.remove('rotate-y-180');
+      }
+    }
+
+    function checkMatch() {
+      isLocked = true;
+      const [idx1, idx2] = flippedIndices;
+      const card1 = cards[idx1];
+      const card2 = cards[idx2];
+
+      const config = DIFFICULTIES[currentDifficulty];
+
+      if (card1.id === card2.id) {
+        // Matched
+        setTimeout(() => {
+          playSound('match');
+          matchedIndices.add(idx1);
+          matchedIndices.add(idx2);
+
+          // Give nice visual affirmation on cards
+          highlightMatched(idx1);
+          highlightMatched(idx2);
+
+          document.getElementById('pairsFoundText').textContent = `${matchedIndices.size / 2} / ${config.pairs}`;
+          flippedIndices = [];
+          isLocked = false;
+
+          // Check Win Condition
+          if (matchedIndices.size === cards.length) {
+            handleVictory();
+          }
+        }, 500);
+
+      } else {
+        // Not matched -> Flip back gently after delay
+        setTimeout(() => {
+          flipCard(idx1, false);
+          flipCard(idx2, false);
+          flippedIndices = [];
+          isLocked = false;
+        }, 1200);
+      }
+    }
+
+    function highlightMatched(index) {
+      const cardFront = document.querySelector(`#card-${index} .card-front`);
+      if (cardFront) {
+        cardFront.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-100');
+      }
+    }
+
+    // Hint function: reveals an un-matched pair for 1.6 seconds
+    function useHint() {
+      if (isLocked || matchedIndices.size === cards.length) return;
+
+      // Find an unmatched pair
+      const unmatchedList = [];
+      cards.forEach((c, idx) => {
+        if (!matchedIndices.has(idx)) {
+          unmatchedList.push({ ...c, index: idx });
+        }
+      });
+
+      if (unmatchedList.length < 2) return;
+
+      // Group by ID
+      const grouped = {};
+      unmatchedList.forEach(item => {
+        if (!grouped[item.id]) grouped[item.id] = [];
+        grouped[item.id].push(item.index);
+      });
+
+      const availablePairs = Object.values(grouped).filter(arr => arr.length === 2);
+      if (availablePairs.length === 0) return;
+
+      const targetPair = availablePairs[0];
+
+      isLocked = true;
+      playSound('hint');
+
+      // Briefly add pulse animation and flip
+      targetPair.forEach(idx => {
+        const cardElem = document.getElementById(`card-${idx}`);
+        if (cardElem) cardElem.classList.add('card-hint');
+        flipCard(idx, true);
+      });
+
+      setTimeout(() => {
+        targetPair.forEach(idx => {
+          const cardElem = document.getElementById(`card-${idx}`);
+          if (cardElem) cardElem.classList.remove('card-hint');
+          flipCard(idx, false);
+        });
+        isLocked = false;
+      }, 1600);
+    }
+
+    // Preview all cards for the user-configured duration (3s, 5s, 7s)
+    function previewCards() {
+      if (isLocked) return;
+      isLocked = true;
+      playSound('hint');
+
+      const duration = (userSettings.previewDuration || 3) * 1000;
+      const previewBtnLabel = document.getElementById('btnPreviewLabel');
+      const originalText = `Xem trước (${userSettings.previewDuration} giây)`;
+
+      // Flip all unmatched cards face-up
+      cards.forEach((_, idx) => {
+        if (!matchedIndices.has(idx)) {
+          flipCard(idx, true);
+        }
+      });
+
+      // Countdown display on button
+      let remaining = userSettings.previewDuration || 3;
+      if (previewBtnLabel) previewBtnLabel.textContent = `Đang xem... (${remaining}s)`;
+
+      const countdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining > 0 && previewBtnLabel) {
+          previewBtnLabel.textContent = `Đang xem... (${remaining}s)`;
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        clearInterval(countdownInterval);
+        cards.forEach((_, idx) => {
+          if (!matchedIndices.has(idx) && !flippedIndices.includes(idx)) {
+            flipCard(idx, false);
+          }
+        });
+        if (previewBtnLabel) previewBtnLabel.textContent = originalText;
+        isLocked = false;
+      }, duration);
+    }
+
+    // Victory handling with personalized summary & timeframe rank comparison
+    function handleVictory() {
+      stopTimer();
+      playSound('victory');
+      createConfetti();
+
+      const timeFormatted = updateTimerDisplay();
+      const currentConfig = DIFFICULTIES[currentDifficulty];
+      const durationSeconds = timerSeconds;
+
+      // 1. Record new game session to history
+      const newRecord = {
+        timestamp: Date.now(),
+        difficulty: currentDifficulty,
+        moves: moves,
+        timeSeconds: durationSeconds,
+        theme: userSettings.theme
+      };
+      gameHistory.push(newRecord);
+      saveHistory();
+
+      // 2. Rank comparison in the user-configured timeframe and same difficulty
+      const chosenTf = userSettings.timeframe || '7days';
+      const tfThreshold = getMillisecondsForTimeframe(chosenTf);
+      const tfLabel = getTimeframeLabel(chosenTf);
+
+      // Filter matches in this timeframe for current difficulty
+      const relevantMatches = gameHistory.filter(
+        item => item.timestamp >= tfThreshold && item.difficulty === currentDifficulty
+      );
+
+      // Sort: best time first, then least moves
+      relevantMatches.sort((a, b) => {
+        if (a.timeSeconds !== b.timeSeconds) return a.timeSeconds - b.timeSeconds;
+        return a.moves - b.moves;
+      });
+
+      // Find rank of this current record
+      const rankIndex = relevantMatches.findIndex(item => item === newRecord);
+      const userRank = rankIndex !== -1 ? rankIndex + 1 : 1;
+      const totalInTf = relevantMatches.length;
+
+      // 3. UI Display Elements
+      document.getElementById('finalMoves').textContent = moves;
+      document.getElementById('finalTime').textContent = timeFormatted;
+      document.getElementById('finalDiff').textContent = currentConfig.name;
+
+      const timeTextVn = formatTimeVietnamese(durationSeconds);
+      document.getElementById('victoryPersonalSummary').textContent = 
+        `Bạn Trà My đã hoàn thành trò chơi trong ${timeTextVn} với ${moves} lượt lật thẻ!`;
+
+      // Ranking badge text
+      const rankBadgeElem = document.getElementById('victoryRankBadge');
+      if (userRank === 1 && totalInTf > 1) {
+        rankBadgeElem.innerHTML = `🌟 <strong>Kỷ lục mới!</strong> Kết quả này của bạn Trà My xếp <strong>thứ 1 / ${totalInTf} lần chơi</strong> trong ${tfLabel}!`;
+      } else if (userRank <= 3 && totalInTf >= 3) {
+        rankBadgeElem.innerHTML = `🏆 Xuất sắc! Kết quả này xếp <strong>thứ ${userRank} trên ${totalInTf} lần chơi</strong> trong ${tfLabel}!`;
+      } else {
+        rankBadgeElem.innerHTML = `📊 Kết quả này xếp <strong>thứ ${userRank} trên tổng số ${totalInTf} lần chơi</strong> (${currentConfig.name}) trong ${tfLabel}.`;
+      }
+
+      // Uplifting praise customized for Trà My
+      const praiseOptions = [
+        "Trí nhớ và sự tập trung của bạn Trà My hôm nay rất tuyệt vời!",
+        "Bạn Trà My quan sát rất tinh tường và ghi nhớ các thẻ bài rất nhanh!",
+        "Rất đáng khen ngợi! Não bộ của bạn Trà My đã được rèn luyện rất tích cực hôm nay.",
+        "Bạn Trà My phản xạ rất nhẹ nhàng và khéo léo! Hãy tiếp tục duy trì nhé."
+      ];
+      const selectedPraise = praiseOptions[Math.floor(Math.random() * praiseOptions.length)];
+      document.getElementById('victoryPraise').textContent = `"${selectedPraise}"`;
+
+      // 4. Personalized Spoken Speech (Text-to-Speech)
+      const speechSummary = `Chúc mừng bạn Trà My đã hoàn thành trò chơi trong ${timeTextVn} với ${moves} lượt lật thẻ. Kết quả này xếp thứ ${userRank} trên tổng số ${totalInTf} lần chơi trong ${tfLabel}. ${selectedPraise}`;
+      speakText(speechSummary);
+
+      setTimeout(() => {
+        document.getElementById('victoryModal').classList.remove('hidden');
+      }, 500);
+    }
+
+    function closeVictoryModal() {
+      document.getElementById('victoryModal').classList.add('hidden');
+    }
+
+    // Confetti effect
+    function createConfetti() {
+      const container = document.getElementById('confettiContainer');
+      container.innerHTML = '';
+      const colors = ['#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6'];
+
+      for (let i = 0; i < 40; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (2 + Math.random() * 2) + 's';
+        conf.style.animationDelay = (Math.random() * 0.5) + 's';
+        container.appendChild(conf);
+      }
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 4000);
+    }
+
+    // Window load init
+    window.onload = function() {
+      updateSettingsUI();
+      // Apply initial sound status to UI
+      if (!soundEnabled) {
+        document.getElementById('soundText').textContent = 'Âm thanh: Tắt';
+        document.getElementById('soundIcon').className = 'ph-bold ph-speaker-slash text-xl text-slate-400';
+      }
+      restartGame();
+    };
+  </script>
+</body>
+</html>
