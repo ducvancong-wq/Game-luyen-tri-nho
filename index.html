@@ -105,10 +105,14 @@
     </div>
 
     <!-- Active Theme Badge Indicator -->
-    <div class="flex items-center justify-center gap-2 mb-2 text-sm sm:text-base font-semibold text-emerald-900">
+    <div class="flex items-center justify-center gap-2 mb-2 text-sm sm:text-base font-semibold text-emerald-900 flex-wrap">
       <span>Chủ đề hiện tại:</span>
       <span id="activeThemeBadge" class="px-3 py-1 bg-emerald-100 border border-emerald-300 rounded-full text-emerald-800 font-bold flex items-center gap-1.5 shadow-sm">
         🌿 Hoa & Cây trái
+      </span>
+      <span id="autoRotateBadge" class="hidden px-2.5 py-1 bg-amber-100 border border-amber-300 text-amber-900 rounded-full text-xs font-bold shadow-sm flex items-center gap-1" title="Tự động đổi chủ đề sau 5 ván liên tiếp">
+        <i class="ph-bold ph-arrows-clockwise text-amber-700"></i>
+        <span id="autoRotateBadgeText">Ván 0/5</span>
       </span>
     </div>
 
@@ -228,6 +232,31 @@
                   <div class="font-extrabold text-slate-800">Món ăn truyền thống</div>
                   <div class="text-xs text-slate-500 font-medium">Bát phở, bánh chưng, bắp...</div>
                 </div>
+              </button>
+              <button type="button" onclick="changeTheme('iphone')" id="themeBtn-iphone" class="theme-select-btn p-3 rounded-2xl border-2 text-left flex items-center gap-3 transition sm:col-span-2">
+                <div class="w-10 h-10 rounded-[22.5%] overflow-hidden shadow-sm flex-shrink-0">
+                  <svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosBtnMsgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34C759"/><stop offset="100%" stop-color="#248A3D"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosBtnMsgGrad)"/><path d="M50 24C32.3 24 18 36.3 18 51.5C18 59.8 22.3 67.2 29.2 72.3C28.5 76.5 26.5 82.2 24.2 84.8C23.8 85.3 24.3 85.9 24.8 85.6C31.5 81.9 38.6 77.8 41.8 77.5C44.4 78.4 47.1 79 50 79C67.7 79 82 66.7 82 51.5C82 36.3 67.7 24 50 24Z" fill="#FFFFFF"/></svg>
+                </div>
+                <div>
+                  <div class="font-extrabold text-slate-800">Ứng dụng iPhone quen thuộc</div>
+                  <div class="text-xs text-slate-500 font-medium">Tin nhắn, điện thoại, nghe nhạc, ảnh, safari, ghi chú...</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Auto-rotate theme option -->
+            <div class="mt-3 bg-amber-50/90 p-3.5 rounded-2xl border-2 border-amber-200 flex items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 bg-amber-200 text-amber-900 rounded-xl flex items-center justify-center text-xl font-bold shadow-sm flex-shrink-0">
+                  <i class="ph-bold ph-arrows-clockwise"></i>
+                </span>
+                <div>
+                  <div class="font-extrabold text-amber-950 text-sm sm:text-base">Tự động luân phiên đổi chủ đề sau 5 ván chơi</div>
+                  <div class="text-xs text-amber-800 font-medium" id="autoRotateStatusText">Đang bật • Đã chơi 0/5 ván liên tiếp</div>
+                </div>
+              </div>
+              <button id="toggleAutoRotateBtn" onclick="toggleAutoRotateTheme()" class="px-3.5 py-1.5 rounded-xl font-bold transition border-2 text-xs sm:text-sm bg-emerald-600 text-white border-emerald-600 shadow-sm whitespace-nowrap">
+                Bật
               </button>
             </div>
           </div>
@@ -443,6 +472,9 @@
           <!-- Ranking comparison result injected here -->
         </div>
 
+        <!-- Theme auto-rotation progress / notification badge -->
+        <div id="victoryRotationBadge"></div>
+
         <p class="text-sm sm:text-base text-slate-600 mb-4 font-medium italic" id="victoryPraise">
           <!-- Personalized positive affirmation for Trà My -->
         </p>
@@ -483,6 +515,22 @@
   </footer>
 
   <script>
+    /* Vector Apple iOS App Icons - Authentic Pixel-Perfect Design */
+    const IOS_ICONS = {
+      messages: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosMsgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34C759"/><stop offset="100%" stop-color="#248A3D"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosMsgGrad)"/><path d="M50 24C32.3 24 18 36.3 18 51.5C18 59.8 22.3 67.2 29.2 72.3C28.5 76.5 26.5 82.2 24.2 84.8C23.8 85.3 24.3 85.9 24.8 85.6C31.5 81.9 38.6 77.8 41.8 77.5C44.4 78.4 47.1 79 50 79C67.7 79 82 66.7 82 51.5C82 36.3 67.7 24 50 24Z" fill="#FFFFFF"/></svg>`,
+      phone: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosPhoneGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34C759"/><stop offset="100%" stop-color="#28CD41"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosPhoneGrad)"/><path d="M68.5 72.8C63.2 78.1 55.4 78.2 47.5 73.5C39.5 68.6 31.4 60.5 26.5 52.5C21.8 44.6 21.9 36.8 27.2 31.5L32.8 25.9C34.8 23.9 38 23.9 40 25.9L46.8 32.7C48.8 34.7 48.8 37.9 46.8 39.9L43.8 42.9C43.2 43.5 43.1 44.5 43.6 45.2C46.8 50.5 50.8 54.5 56.1 57.7C56.8 58.2 57.8 58.1 58.4 57.5L61.4 54.5C63.4 52.5 66.6 52.5 68.6 54.5L75.4 61.3C77.4 63.3 77.4 66.5 75.4 68.5L68.5 72.8Z" fill="#FFFFFF"/></svg>`,
+      music: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosMusicGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FA233B"/><stop offset="100%" stop-color="#FB5C74"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosMusicGrad)"/><path d="M38 66C33.6 66 30 69.6 30 74C30 78.4 33.6 82 38 82C42.4 82 46 78.4 46 74V38L70 32V64C65.6 64 62 67.6 62 72C62 76.4 65.6 80 70 80C74.4 80 78 76.4 78 72V24C78 22.3 76.5 21 74.8 21.4L38.8 29.4C37.8 29.6 38 30.8 38 32V66Z" fill="#FFFFFF"/></svg>`,
+      photos: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="22.5" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1.5"/><g transform="translate(50,50)"><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#FF3B30" opacity="0.88"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#FF9500" opacity="0.88" transform="rotate(45)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#FFCC00" opacity="0.88" transform="rotate(90)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#34C759" opacity="0.88" transform="rotate(135)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#00C7BE" opacity="0.88" transform="rotate(180)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#007AFF" opacity="0.88" transform="rotate(225)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#5856D6" opacity="0.88" transform="rotate(270)"/><ellipse cx="0" cy="-17" rx="7.5" ry="15" fill="#AF52DE" opacity="0.88" transform="rotate(315)"/></g></svg>`,
+      safari: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><radialGradient id="iosSafariCompass" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00A2FF"/><stop offset="100%" stop-color="#0066FF"/></radialGradient></defs><rect width="100" height="100" rx="22.5" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1.5"/><circle cx="50" cy="50" r="37" fill="url(#iosSafariCompass)"/><g stroke="#FFFFFF" stroke-width="1.2" opacity="0.6"><line x1="50" y1="16" x2="50" y2="21"/><line x1="50" y1="79" x2="50" y2="84"/><line x1="16" y1="50" x2="21" y2="50"/><line x1="79" y1="50" x2="84" y2="50"/><line x1="26" y1="26" x2="30" y2="30"/><line x1="70" y1="70" x2="74" y2="74"/><line x1="74" y1="26" x2="70" y2="30"/><line x1="26" y1="74" x2="30" y2="70"/></g><polygon points="50,50 45,46 75,25 54,55" fill="#FF3B30"/><polygon points="50,50 46,45 25,75 55,54" fill="#FFFFFF"/><circle cx="50" cy="50" r="3.5" fill="#FFFFFF" stroke="#FF3B30" stroke-width="1"/></svg>`,
+      mail: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosMailGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1B82FD"/><stop offset="100%" stop-color="#055BFE"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosMailGrad)"/><path d="M20 33C18 33 16 35 16 37V63C16 65 18 67 20 67H80C82 67 84 65 84 63V37C84 35 82 33 80 33H20Z" fill="#FFFFFF"/><path d="M17 35L50 55L83 35" fill="none" stroke="#055BFE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      notes: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosNotesTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD60A"/><stop offset="100%" stop-color="#F5B800"/></linearGradient><clipPath id="notesClip"><rect width="100" height="100" rx="22.5"/></clipPath></defs><g clip-path="url(#notesClip)"><rect width="100" height="100" fill="#FCFCFD"/><rect width="100" height="28" fill="url(#iosNotesTop)"/><line x1="28" y1="28" x2="28" y2="100" stroke="#FFE082" stroke-width="1.5"/><line x1="14" y1="44" x2="86" y2="44" stroke="#E5E5EA" stroke-width="1.5"/><line x1="14" y1="58" x2="86" y2="58" stroke="#E5E5EA" stroke-width="1.5"/><line x1="14" y1="72" x2="86" y2="72" stroke="#E5E5EA" stroke-width="1.5"/><line x1="14" y1="86" x2="86" y2="86" stroke="#E5E5EA" stroke-width="1.5"/></g><rect width="100" height="100" rx="22.5" fill="none" stroke="#D1D1D6" stroke-width="1"/></svg>`,
+      camera: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosCamBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8E8E93"/><stop offset="100%" stop-color="#555559"/></linearGradient><radialGradient id="iosLensGlass" cx="45%" cy="45%" r="50%"><stop offset="0%" stop-color="#1E3A5F"/><stop offset="60%" stop-color="#0A1526"/><stop offset="100%" stop-color="#000000"/></radialGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosCamBg)"/><path d="M38 24H62L66 30H34L38 24Z" fill="#3A3A3C"/><rect x="18" y="30" width="64" height="46" rx="8" fill="#2C2C2E"/><circle cx="50" cy="53" r="19" fill="#3A3A3C" stroke="#AEAEB2" stroke-width="2.5"/><circle cx="50" cy="53" r="14" fill="url(#iosLensGlass)"/><circle cx="46" cy="49" r="4.5" fill="#4A6572" opacity="0.6"/><circle cx="70" cy="38" r="3.5" fill="#FFD60A"/></svg>`,
+      clock: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="22.5" fill="#000000"/><g stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"><line x1="50" y1="16" x2="50" y2="22"/><line x1="50" y1="78" x2="50" y2="84"/><line x1="16" y1="50" x2="22" y2="50"/><line x1="78" y1="50" x2="84" y2="50"/><line x1="26" y1="26" x2="30" y2="30"/><line x1="70" y1="70" x2="74" y2="74"/><line x1="74" y1="26" x2="70" y2="30"/><line x1="26" y1="74" x2="30" y2="70"/></g><line x1="50" y1="50" x2="35" y2="35" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/><line x1="50" y1="50" x2="68" y2="32" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/><line x1="50" y1="50" x2="38" y2="74" stroke="#FF453A" stroke-width="1.8" stroke-linecap="round"/><circle cx="50" cy="50" r="3.5" fill="#FF453A"/></svg>`,
+      maps: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><clipPath id="mapsClip"><rect width="100" height="100" rx="22.5"/></clipPath></defs><g clip-path="url(#mapsClip)"><rect width="100" height="100" fill="#F4F1E8"/><path d="M0 0H42L35 45L0 35Z" fill="#C8E6C9"/><path d="M65 65L100 55V100H55Z" fill="#C8E6C9"/><path d="M0 60C30 55 45 40 60 15L75 0H85L68 20C52 48 35 68 0 72Z" fill="#5AC8FA" opacity="0.9"/><path d="M25 100L85 0H95L35 100Z" fill="#FFD60A" opacity="0.8"/><path d="M50 24C42 24 35.5 30.5 35.5 38.5C35.5 49 50 68 50 68C50 68 64.5 49 64.5 38.5C64.5 30.5 58 24 50 24Z" fill="#FF3B30"/><circle cx="50" cy="38.5" r="5" fill="#FFFFFF"/></g><rect width="100" height="100" rx="22.5" fill="none" stroke="#D1D1D6" stroke-width="1"/></svg>`,
+      settings: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosGearBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8E8E93"/><stop offset="100%" stop-color="#636366"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosGearBg)"/><g fill="#D1D1D6"><rect x="44" y="17" width="12" height="66" rx="3"/><rect x="44" y="17" width="12" height="66" rx="3" transform="rotate(45 50 50)"/><rect x="44" y="17" width="12" height="66" rx="3" transform="rotate(90 50 50)"/><rect x="44" y="17" width="12" height="66" rx="3" transform="rotate(135 50 50)"/><circle cx="50" cy="50" r="27" fill="#E5E5EA"/><circle cx="50" cy="50" r="18" fill="#8E8E93"/><circle cx="50" cy="50" r="11" fill="#48484A"/><circle cx="50" cy="50" r="6" fill="#8E8E93"/></g></svg>`,
+      weather: `<svg viewBox="0 0 100 100" class="w-full h-full"><defs><linearGradient id="iosWeatherBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2DA5F8"/><stop offset="100%" stop-color="#1B72DF"/></linearGradient><linearGradient id="iosSunGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFDD00"/><stop offset="100%" stop-color="#FF9500"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#iosWeatherBg)"/><circle cx="39" cy="40" r="18" fill="url(#iosSunGrad)"/><path d="M35 68H68C75.2 68 81 62.2 81 55C81 48.2 75.8 42.6 69 42.1C68.1 34.2 61.3 28 53 28C45.2 28 38.8 33.4 37.3 40.7C35.9 40.2 34.5 40 33 40C25.8 40 20 45.8 20 53C20 60.5 26.2 66.8 33.7 67.9L35 68Z" fill="#FFFFFF" opacity="0.95"/></svg>`
+    };
+
     /* Multi-theme database with rich Vietnamese everyday items */
     const THEMES_DATA = {
       plants: {
@@ -556,6 +604,24 @@
           { id: 'dumpling', name: 'Bánh bao', icon: '🥟', color: 'from-stone-50 to-yellow-50', textCol: 'text-stone-900' },
           { id: 'pot', name: 'Nồi lẩu', icon: '🍲', color: 'from-orange-50 to-amber-100', textCol: 'text-orange-950' }
         ]
+      },
+      iphone: {
+        name: 'Ứng dụng iPhone',
+        badge: '📱 Ứng dụng iPhone',
+        items: [
+          { id: 'messages', name: 'Tin nhắn', icon: IOS_ICONS.messages, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'phone', name: 'Điện thoại', icon: IOS_ICONS.phone, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'music', name: 'Nghe nhạc', icon: IOS_ICONS.music, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'photos', name: 'Thư viện ảnh', icon: IOS_ICONS.photos, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'safari', name: 'Safari', icon: IOS_ICONS.safari, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'mail', name: 'Thư Mail', icon: IOS_ICONS.mail, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'notes', name: 'Ghi chú', icon: IOS_ICONS.notes, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'camera', name: 'Máy ảnh', icon: IOS_ICONS.camera, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'clock', name: 'Đồng hồ', icon: IOS_ICONS.clock, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'maps', name: 'Bản đồ', icon: IOS_ICONS.maps, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'settings', name: 'Cài đặt', icon: IOS_ICONS.settings, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' },
+          { id: 'weather', name: 'Thời tiết', icon: IOS_ICONS.weather, color: 'from-slate-50 to-zinc-100', textCol: 'text-slate-900' }
+        ]
       }
     };
 
@@ -577,6 +643,7 @@
     // User Preferences (with LocalStorage support)
     let userSettings = {
       theme: 'plants',
+      autoRotateTheme: true, // Tự động luân phiên đổi chủ đề sau 5 ván liên tiếp
       voiceEnabled: true,
       voiceURI: 'auto',
       voiceSpeed: 'normal',
@@ -586,6 +653,21 @@
       soundEnabled: true
     };
 
+    // Tracking consecutive completed games for auto-rotating theme
+    let consecutiveCompletedGames = 0;
+    try {
+      const savedCount = localStorage.getItem('memory_game_consecutive_games');
+      if (savedCount !== null) {
+        consecutiveCompletedGames = parseInt(savedCount, 10) || 0;
+      }
+    } catch(e) {}
+
+    function saveConsecutiveCount() {
+      try {
+        localStorage.setItem('memory_game_consecutive_games', consecutiveCompletedGames);
+      } catch(e) {}
+    }
+
     // History logs in localStorage
     let gameHistory = [];
 
@@ -594,6 +676,9 @@
       const savedSettings = localStorage.getItem('memory_game_settings');
       if (savedSettings) {
         userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+        if (typeof userSettings.autoRotateTheme !== 'boolean') {
+          userSettings.autoRotateTheme = true;
+        }
         if (!['slow', 'normal', 'fast'].includes(userSettings.voiceSpeed)) {
           userSettings.voiceSpeed = 'normal';
         }
@@ -946,9 +1031,17 @@
     function changeTheme(themeKey) {
       if (!THEMES_DATA[themeKey]) return;
       userSettings.theme = themeKey;
+      consecutiveCompletedGames = 0;
+      saveConsecutiveCount();
       saveSettings();
       updateSettingsUI();
       restartGame();
+    }
+
+    function toggleAutoRotateTheme() {
+      userSettings.autoRotateTheme = !userSettings.autoRotateTheme;
+      saveSettings();
+      updateSettingsUI();
     }
 
     function toggleVoice() {
@@ -1068,6 +1161,39 @@
       // Update badge
       const activeThemeObj = THEMES_DATA[userSettings.theme] || THEMES_DATA.plants;
       document.getElementById('activeThemeBadge').textContent = activeThemeObj.badge;
+
+      // Update auto-rotate badge & settings button/status
+      const autoRotateBadge = document.getElementById('autoRotateBadge');
+      const autoRotateBadgeText = document.getElementById('autoRotateBadgeText');
+      const toggleAutoRotateBtn = document.getElementById('toggleAutoRotateBtn');
+      const autoRotateStatusText = document.getElementById('autoRotateStatusText');
+
+      if (autoRotateBadge && autoRotateBadgeText) {
+        if (userSettings.autoRotateTheme) {
+          autoRotateBadge.classList.remove('hidden');
+          autoRotateBadgeText.textContent = `Ván ${consecutiveCompletedGames}/5`;
+        } else {
+          autoRotateBadge.classList.add('hidden');
+        }
+      }
+
+      if (toggleAutoRotateBtn) {
+        if (userSettings.autoRotateTheme) {
+          toggleAutoRotateBtn.className = 'px-3.5 py-1.5 rounded-xl font-bold transition border-2 text-xs sm:text-sm bg-emerald-600 text-white border-emerald-600 shadow-sm whitespace-nowrap';
+          toggleAutoRotateBtn.textContent = 'Bật';
+        } else {
+          toggleAutoRotateBtn.className = 'px-3.5 py-1.5 rounded-xl font-bold transition border-2 text-xs sm:text-sm bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap';
+          toggleAutoRotateBtn.textContent = 'Tắt';
+        }
+      }
+
+      if (autoRotateStatusText) {
+        if (userSettings.autoRotateTheme) {
+          autoRotateStatusText.textContent = `Đang bật • Đã chơi ${consecutiveCompletedGames}/5 ván liên tiếp (Sau 5 ván sẽ tự động đổi chủ đề)`;
+        } else {
+          autoRotateStatusText.textContent = `Đang tắt • Bật tính năng này để các chủ đề tự động đổi sau 5 ván liên tiếp`;
+        }
+      }
     }
 
     // Timeframe range filter helper
@@ -1397,6 +1523,11 @@
         const isMatched = matchedIndices.has(index);
         const isFlipped = flippedIndices.includes(index) || isMatched;
 
+        const isSvg = typeof card.icon === 'string' && card.icon.trim().startsWith('<svg');
+        const iconHtml = isSvg
+          ? `<div class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mb-1 flex items-center justify-center filter drop-shadow-md rounded-[22.5%] overflow-hidden transition-transform duration-300 hover:scale-105">${card.icon}</div>`
+          : `<span class="${fontClasses.icon} filter drop-shadow-sm mb-1">${card.icon}</span>`;
+
         const cardElem = document.createElement('div');
         cardElem.id = `card-${index}`;
         cardElem.className = 'perspective-1000 aspect-square sm:aspect-[4/4.5] cursor-pointer';
@@ -1415,8 +1546,8 @@
 
             <!-- Card Front (Face-up) -->
             <div class="card-front absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-b ${card.color} rounded-2xl border-2 sm:border-4 border-emerald-500 flex flex-col items-center justify-center p-2 text-center shadow-md ${isMatched ? 'ring-4 ring-emerald-400 bg-emerald-100' : ''}">
-              <span class="${fontClasses.icon} filter drop-shadow-sm mb-1">${card.icon}</span>
-              <span class="${fontClasses.text} ${card.textCol} tracking-tight leading-tight">${card.name}</span>
+              ${iconHtml}
+              <span class="${fontClasses.text} ${card.textCol} tracking-tight leading-tight mt-0.5">${card.name}</span>
             </div>
 
           </div>
@@ -1649,6 +1780,46 @@
       } else {
         rankBadgeElem.innerHTML = `📊 Kết quả này xếp <strong>thứ ${userRank} trên tổng số ${totalInTf} lần chơi</strong> (${currentConfig.name}) trong ${tfLabel}.`;
       }
+
+      // Check auto theme rotation after 5 consecutive games
+      let rotationNoticeHtml = '';
+      if (userSettings.autoRotateTheme) {
+        consecutiveCompletedGames++;
+        saveConsecutiveCount();
+        if (consecutiveCompletedGames >= 5) {
+          consecutiveCompletedGames = 0;
+          saveConsecutiveCount();
+          const themeKeys = Object.keys(THEMES_DATA);
+          const curIdx = themeKeys.indexOf(userSettings.theme);
+          const nextTheme = themeKeys[(curIdx + 1) % themeKeys.length];
+          userSettings.theme = nextTheme;
+          saveSettings();
+          rotationNoticeHtml = `
+            <div class="bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-100 border-2 border-emerald-300 rounded-2xl p-3 mb-4 text-emerald-950 font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm">
+              <span class="text-2xl animate-spin">🔄</span>
+              <div>
+                <div>Hoàn thành 5 ván liên tiếp!</div>
+                <div class="text-xs sm:text-sm text-emerald-800 font-semibold mt-0.5">Ván sau sẽ tự động đổi sang: <strong>${THEMES_DATA[nextTheme].badge}</strong></div>
+              </div>
+            </div>
+          `;
+        } else {
+          rotationNoticeHtml = `
+            <div class="mb-4 text-xs sm:text-sm text-emerald-900 bg-amber-50 border border-amber-200 py-1.5 px-3.5 rounded-full inline-flex items-center gap-1.5 font-bold shadow-sm">
+              <i class="ph-bold ph-arrows-clockwise text-amber-600"></i>
+              <span>Luân phiên chủ đề: Đã chơi <strong>${consecutiveCompletedGames}/5 ván</strong></span>
+            </div>
+          `;
+        }
+      }
+
+      const victoryRotationElem = document.getElementById('victoryRotationBadge');
+      if (victoryRotationElem) {
+        victoryRotationElem.innerHTML = rotationNoticeHtml;
+      }
+
+      // Update main UI badges
+      updateSettingsUI();
 
       // Uplifting praise customized for Trà My
       const praiseOptions = [
